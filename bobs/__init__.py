@@ -21,14 +21,14 @@ def preferred(limit=None):
     infinite.
     """
     for n in [1, 2, 3, 5, 7]:
-        if n > limit:
+        if limit is not None and n > limit:
             return
         yield n
     p = 0
     while True:
         for a in [10, 15, 20, 30, 45, 70]:
             n = a * 10 ** p
-            if n > limit:
+            if limit is not None and n > limit:
                 return
             yield n
         p += 1
