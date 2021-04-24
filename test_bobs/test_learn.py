@@ -18,7 +18,9 @@ class TestLearn(unittest.TestCase):
         trained_model = learn.load_or_train(path, self.train)
         pred = trained_model.predict(np.array([[5, 6], [7, 8]]))
         
-        self.assertEqual(list(pred), [11, 15])
+        self.assertEqual(len(pred), 2)
+        for pred_e, actual_e in zip(pred, [11, 15]):
+            self.assertAlmostEqual(pred_e, actual_e)
         self.assertTrue(os.path.exists(path))
     
     def test_load_or_train_file_present(self):

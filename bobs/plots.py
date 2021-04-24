@@ -16,14 +16,14 @@ def distplot(data, x):
     sns.histplot(data=data, x=x, kde=True, stat='density', linewidth=0)
 
 
-def confusionplot(y_true, y_pred, labels):
-    
+def confusionplot(y_true, y_pred, labels, display_labels=None):
+    if display_labels is None:
+        display_labels = labels
     confusion = metrics.confusion_matrix(y_true, y_pred, labels=labels)
     sns.heatmap(
-        pd.DataFrame(confusion), annot=True, cmap='YlGnBu', fmt='g'
+        pd.DataFrame(confusion, index=display_labels, columns=display_labels),
+        annot=True, cmap='YlGnBu', fmt='g',
     )
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
-    plt.xticks(np.arange(len(labels)) + 0.5, labels)
-    plt.yticks(np.arange(len(labels)) + 0.5, labels)
 
