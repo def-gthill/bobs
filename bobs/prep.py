@@ -32,6 +32,7 @@ class ColumnAssigner(base.TransformerMixin):
     def __init__(self, column_names):
         self.column_names = column_names
 
+    # noinspection PyUnusedLocal
     def fit(self, data, targets=None):
         return self
 
@@ -50,15 +51,17 @@ class PandasColumnTransformer(base.TransformerMixin):
 
     The implementation comes (with slight modifications to
     make the column names nicer) from this blog post by
-    Johannes Haupt: https://johaupt.github.io/scikit-learn/tutorial/python/data%20processing/ml%20pipeline/model%20interpretation/columnTransformer_feature_names.html
+    Johannes Haupt: https://johaupt.github.io/scikit-learn/tutorial/python/data%20processing/ml%20pipeline/
+    model%20interpretation/columnTransformer_feature_names.html
     """
 
     def __init__(self, *args, **kwargs):
         self.transformer = compose.ColumnTransformer(*args, **kwargs)
+        self.column_names = None
 
     def fit(self, data, targets=None):
         self.transformer.fit(data, targets)
-        self._column_names = self._get_column_names(self.transformer)
+        self.column_names = self._get_column_names(self.transformer)
         return self
 
     def transform(self, data):
@@ -66,14 +69,14 @@ class PandasColumnTransformer(base.TransformerMixin):
         return pd.DataFrame(
             transformed_values,
             index=data.index,
-            columns=self._column_names,
+            columns=self.column_names,
         )
 
     @classmethod
     def _get_column_names(cls, transformer):
         feature_names = []
 
-        for name, sub_transformer, columns, _ in transformer._iter(fitted=True):
+        for name, sub_transformer, columns in transformer.transformers_:
             if type(sub_transformer) == pipeline.Pipeline:
                 # Recursive call on pipeline
                 _names = cls._get_column_names_pipeline(sub_transformer, columns)
@@ -82,19 +85,19 @@ class PandasColumnTransformer(base.TransformerMixin):
                     _names = columns
                 feature_names.extend(_names)
             else:
-                feature_names.extend(cls.get_names(transformer, sub_transformer, columns))
+                feature_names.extend(cls._get_names(transformer, sub_transformer, columns))
 
         return feature_names
 
     @classmethod
     def _get_column_names_pipeline(cls, transformer, columns=None):
-        for _, name, sub_transformer in transformer._iter():
-            columns = cls.get_names(transformer, sub_transformer, columns)
+        for name, sub_transformer in transformer.steps:
+            columns = cls._get_names(transformer, sub_transformer, columns)
 
         return columns
 
     @classmethod
-    def get_names(cls, transformer, trans, columns):
+    def _get_names(cls, transformer, trans, columns: list):
         if trans == 'drop' or (
                 hasattr(columns, '__len__') and not len(columns)):
             return []
@@ -170,6 +173,7 @@ class ColumnDropper(base.TransformerMixin):
 
     def __init__(self, column_names):
         self.columns_to_drop = column_names
+        self.columns_to_keep = None
 
     # noinspection PyUnusedLocal
     def fit(self, data, targets=None):

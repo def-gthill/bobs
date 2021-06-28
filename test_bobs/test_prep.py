@@ -46,9 +46,6 @@ class TestPrep(unittest.TestCase):
         from sklearn.pipeline import Pipeline
         from sklearn.impute import SimpleImputer
         from sklearn.preprocessing import StandardScaler, OneHotEncoder
-
-        from sklearn.model_selection import train_test_split
-        from sklearn.linear_model import LogisticRegression
         
         x, y = fetch_openml("titanic", version=1, as_frame=True, return_X_y=True)
         
@@ -72,12 +69,18 @@ class TestPrep(unittest.TestCase):
         )
         
         transformed = preprocessor.fit_transform(x)
+
+        expected_column_names = [
+            'age', 'fare',
+            'embarked_C', 'embarked_Q', 'embarked_S', 'embarked_missing',
+            'sex_female', 'sex_male',
+            'pclass_1.0', 'pclass_2.0', 'pclass_3.0',
+        ]
+        self.assertEqual(
+            preprocessor.column_names,
+            expected_column_names,
+        )
         self.assertEqual(
             list(transformed.columns),
-            [
-                'age', 'fare',
-                'embarked_C', 'embarked_Q', 'embarked_S', 'embarked_missing',
-                'sex_female', 'sex_male',
-                'pclass_1.0', 'pclass_2.0', 'pclass_3.0',
-            ]
+            expected_column_names,
         )
